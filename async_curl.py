@@ -84,10 +84,11 @@ class async_curl():
         if 'url' in kw:
             del kw['url']
 
-        async with aiohttp.request(method, url, **kw) as response:
+        async with aiohttp.ClientSession() as session:
+            async with session.request(method, url, **kw) as response:
             # print(self.task_url_list[index])
             # response.request_info # 请求信息
-            return await response.text()
+                return await response.text()
 
     async def _bulk_task(self, num, current_start_index):
         '''
