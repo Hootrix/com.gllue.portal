@@ -43,10 +43,13 @@ class async_curl():
             task_url_list (list, optional): [待处理的任务列表]. Defaults to [].
         '''
         super().__init__()
-        self.task_done = []  # 已完成的任务列表
+        self.initialize_task()
         self.set_task(task_url_list)
-
+    def initialize_task(self) -> None:
+        self.task_url_list = []
+        self.task_done = [] # 已完成的任务列表
     def set_task(self, task_url_list):
+        self.initialize_task()
         self.task_url_list = task_url_list
         self._emit = True
 
