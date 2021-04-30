@@ -4,7 +4,7 @@ import asyncio
 '''
 EXAMPLE:
 
-    # single task request:
+    # Single task request:
         import asyncio
         reps = asyncio.run(*[async_curl.request(url)])
         print(reps)
@@ -27,6 +27,12 @@ EXAMPLE:
         curl = async_curl(task)
         for reps in curl.run_task(10):
             print(reps)
+    ---
+    # Configure custom returns:
+    async def _cb(resp): 
+        resp = json.loads(await resp.text())
+        return resp
+    curl.set_response_callback(_cb)
 '''
 
 
@@ -48,6 +54,7 @@ class async_curl():
     def initialize_task(self) -> None:
         self.task_url_list = []
         self.task_done = [] # 已完成的任务列表
+        self.response_callback = None
     def set_task(self, task_url_list):
         self.initialize_task()
         self.task_url_list = task_url_list
@@ -57,6 +64,9 @@ class async_curl():
         self._check_task(task)
         self.task_url_list.append(task)
         self._emit = True
+    def set_response_callback(self,callback = None):
+        if callable(callback):
+            self.response_callback = callback
 
     def _check_task(self, task):
         assert isinstance(task, (str, tuple)
@@ -91,6 +101,15 @@ class async_curl():
             async with session.request(method, url, **kw) as response:
             # print(self.task_url_list[index])
             # response.request_info # 请求信息
+                if self.response_callback:# 自定义数据返回
+                    try:
+                        return await self.response_callback(response)
+                    except TypeError as _e:
+                        if "can't be used in 'await' expression" in str(_e):
+                            return self.response_callback(response)
+                    except Exception as _e:
+                        raise _e
+
                 return await response.text()
 
     async def _bulk_task(self, num, current_start_index):
